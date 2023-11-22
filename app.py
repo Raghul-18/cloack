@@ -23,28 +23,29 @@ def index():
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+    if request.method != 'POST':
+        return render_template('signup.html')
 
-        # Check if username already exists
-        if users_collection.find_one({'username': username}):
-            flash('Username already exists. Choose a different one.', 'error')
-            return redirect(url_for('signup'))
+    username: str = request.form['username']
+    password: str = request.form['password']
 
-        # Hash the password
-        hashed_password = generate_password_hash(password, method='sha256')
+    # Check if username already exists
+    if users_collection.find_one({'username': username}):
+        flash('Username already exists. Choose a different one.', 'error')
+        return redirect(url_for('signup'))
 
-        # Insert user into the database
-        users_collection.insert_one({'username': username, 'password': hashed_password})
-        flash('Registration successful! Please log in.', 'success')
-        return redirect(url_for('login'))
+    # Hash the password
+    hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
 
-    return render_template('signup.html')
+    # Insert user into the database
+    users_collection.insert_one({'username': username, 'password': hashed_password})
+    flash('Registration successful! Please log in.', 'success')
+    return redirect(url_for('login'))
 
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    flash("hii","error")
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
@@ -57,7 +58,7 @@ def login():
         # Check if the user exists and the password is correct
         if user and check_password_hash(user['password'], password):
             flash('Login successful!', 'success')
-            return redirect(url_for('index'))
+            return render_template('index.html')
         else:
             print("Login failed")  # Print a message to the console
             flash('Invalid username or password. Please try again.', 'error')
